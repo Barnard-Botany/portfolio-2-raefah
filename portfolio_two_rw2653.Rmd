@@ -1,0 +1,166 @@
+---
+title: "Portfolio 2"
+output: html_notebook
+---
+
+Portfolio 2 (Biodiversity Statistics), Part 2.3 (VEGAN Analysis)
+By: Raefah Wahid
+
+```{r}
+library(BIEN)
+library(plyr)
+library(labdsv)
+library(vegan)
+```
+
+Getting data from Hudson county, Bergen county, and Essex county (in New Jersey, where I'm from!).
+
+```{r}
+hudson <- BIEN_occurrence_county(country="United States", state="New Jersey", county = "Hudson")
+hudson
+bergen <- BIEN_occurrence_county(country="United States", state="New Jersey", county = "Bergen")
+bergen
+essex <- BIEN_occurrence_county(country="United States", state="New Jersey", county = "Essex")
+essex
+```
+
+Getting occurrence and abundance for each of the counties.
+
+```{r}
+# occurrence data
+hudson_occ = hudson[c(1)]
+bergen_occ = bergen[c(1)]
+essex_occ = essex[c(1)]
+
+# abundance data
+hudson_ab = count(hudson_occ)
+bergen_ab = count(bergen_occ)
+essex_ab = count(essex_occ)
+
+# checking data
+hudson_occ
+hudson_ab
+```
+
+We're just going to clean up the occurrence and abundance lists for each of the counties so we can use the matrify function. 
+
+```{r}
+
+# renaming data frame
+hudson_ab = data.frame("hudson", hudson_ab)
+bergen_ab = data.frame("bergen", bergen_ab)
+essex_ab = data.frame("essex", essex_ab)
+
+# renaming columns
+names(hudson_ab)<-c("ListID", "SpeciesID", "Freq")
+names(bergen_ab)<-c("ListID", "SpeciesID", "Freq")
+names(essex_ab)<-c("ListID", "SpeciesID", "Freq")
+
+# printing data frames
+hudson_ab
+bergen_ab
+essex_ab
+```
+
+We're now going to bind all three coounties' data frames.
+
+```{r}
+# appending all county data frames to each other
+counties = rbind(hudson_ab, bergen_ab, essex_ab)
+counties
+```
+
+Let's convert the concatenated data frame into an abundance matrix with all counties' data.
+
+```{r}
+counties_matrix<-matrify(counties)
+counties_matrix
+```
+
+We can now compute the diversities of the species using this abundance data! We can do this using the built-in functions in the VEGAN package.
+
+```{r}
+simpson_index<-diversity(counties_matrix, index = "simpson")
+shannon_index<-diversity(counties_matrix, index = "shannon")
+print("Simpson Index: ", quote = FALSE)
+simpson_index
+print("Shannon Index: ", quote = FALSE)
+shannon_index
+```
+
+The Simpson and Shannon values that we got for all counties are very similar. Bergen county has a slightly higher Simpson and Shannon index, so its diversity may be better than the other counties. But, on the whole, all three areas seem to have the same level of diversity. 
+
+Now, let's compute the disimilarity and similarity between the three counties using the bray and jaccard functions.
+
+```{r}
+bray_index = vegdist(counties_matrix, "bray")
+jaccard_index = vegdist(counties_matrix, "jaccard", binary=T)
+print("Bray Index: ", quote = FALSE)
+bray_index
+print("Jaccard Index: ", quote = FALSE)
+jaccard_index
+```
+
+As you can see, these results confirm what we found out from the Simpson and Shannon diversity functions!
+
+Now let's compute diversity amongs three other places using plant lists from Welikia and Plant-o-Matic. I got one list of plant species from Welikia (from around Columbia University), one from Plant-o-Matic (from a place in Jersey City), and I compiled the last list myself (it's a list of plants I use) and put them into CSV files. Let's read in those CSV files.
+
+```{r}
+welikia_list = read.csv("welikia.csv")
+app_list = read.csv("plant-o-matic_plants.csv")
+used_list = read.csv("plants_i_use.csv")
+welikia_species = paste(welikia_list$Scientific.Name)
+app_species = paste(app_list$Scientific.Name)
+used_species = paste(used_list$Scientific.Name)
+
+# printing lists to make they were read in correctly
+welikia_species
+app_species
+used_species
+```
+
+Let's get the abundance data for the areas.
+
+```{r}
+welikia_ab = count(welikia_species)
+welikia_ab = data.frame("Welikia", welikia_ab)
+names(welikia_ab)<-c("ListID", "SpeciesID", "Freq")
+welikia_ab
+
+app_ab = count(app_species)
+app_ab = data.frame("App", app_ab)
+names(app_ab)<-c("ListID", "SpeciesID", "Freq")
+app_ab
+
+used_ab = count(used_species)
+used_ab = data.frame("Plants_I_Use", used_ab)
+names(used_ab)<-c("ListID", "SpeciesID", "Freq")
+used_ab
+```
+
+Let's bind all the CSV files together so we can matrify them.
+
+```{r}
+all_ab = rbind(welikia_ab, app_ab, used_ab)
+all_matrix = matrify(all_ab)
+all_matrix
+```
+
+And let's compute the similarity and dissimilarity indices using the functions from before!
+
+```{r}
+simpson<-diversity(all_matrix, index = "simpson")
+shannon<-diversity(all_matrix, index = "shannon")
+print("Simpson Index: ", quote = FALSE)
+simpson
+print("Shannon Index: ", quote = FALSE)
+shannon
+jaccard = vegdist(all_matrix, "jaccard")
+print("Jaccard Index: ", quote = FALSE)
+jaccard
+bray = vegdist(all_matrix, "bray")
+print("Bray Index: ", quote = FALSE)
+bray
+```
+
+As you can see from these results, the lists from Welikia and the Plant-o-Matic app are pretty similar. This makes sense, since the areas are fairly close by (Columbia University and Jersey City). But, the plants I use on a (near) daily basis are very different from the Welikia and Plant-o-Matic lists! This makes sense, since a lot of the plants I use (food-wise) are mostly found South Asia and wouldn't be native to NYC or Jersey City.
