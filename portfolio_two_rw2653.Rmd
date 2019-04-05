@@ -164,3 +164,5 @@ bray
 ```
 
 As you can see from these results, the lists from Welikia and the Plant-o-Matic app are pretty similar. This makes sense, since the areas are fairly close by (Columbia University and Jersey City). But, the plants I use on a (near) daily basis are very different from the Welikia and Plant-o-Matic lists! This makes sense, since a lot of the plants I use (food-wise) are mostly found South Asia and wouldn't be native to NYC or Jersey City.
+
+# Great! Your code ran perfectly. The only thing that concerns me is I can't tell if you understand how to interpret the Bray-Curtis and Jaccard indices, based on your explanations. Can you provide a little more explanation for those values in both sections of this notebook (county data and lists you created).
